@@ -1,0 +1,57 @@
+---
+title: "Omnibus Tests for Treatment Effect Heterogeneity"
+author: Apoorva Lal
+date: "`r Sys.Date()`"
+---
+
+We simulate some experimental data with effect heterogeneity, and
+use the testing approach in Ding, Feller, and Miratrix (2018) to test
+for systematic heterogeneity.
+
+```{r}
+suppressPackageStartupMessages(library(causalTransportR))
+set.seed(42)
+
+# simulate RCT
+treatprob <- 0.5
+
+# workhorse
+dgp <- function(n = 10000, p = 10, treat.prob = treatprob,
+                # bounds of X
+                Xbounds = c(-1, 1),
+                # nonlinear heterogeneity
+                tauF = function(x) 1 / exp(-x[3]),
+                # nonlinear y0
+                y0F = function(x) pmax(x[1] + x[2], 0) + sin(x[5]) * pmax(x[7], 0.5)) {
+    X <- matrix(runif(n * p, Xbounds[1], Xbounds[2]), n, p)
+    a <- rbinom(n, 1, treat.prob)
+    # generate outcomes using supplied functions
+    TAU <- apply(X, 1, tauF)
+    Y0 <- apply(X, 1, y0F)
+    # outcome
+    y <- (a * TAU + Y0 + rnorm(n))
+	list(y = y, a = a, X = X)
+}
+```
+
+## simulation with heterogeneity
+
+```{r}
+with(dgp(), dfmTest(y, a, X))
+```
+
+p-value $\approx 0$ - conclude that there is systematic heterogeneity.
+
+
+## simulation without heterogeneity
+
+```{r}
+with(dgp(tauF = function(x) 1/3), dfmTest(y, a, X))
+```
+
+large p-value - conclude that there is no systematic heterogeneity.
+
+
+__References__
+
+Ding, P., A. Feller, and L. Miratrix. (2019): “Decomposing Treatment Effect Variation,” Journal of the American Statistical Association, 114, 304–17.

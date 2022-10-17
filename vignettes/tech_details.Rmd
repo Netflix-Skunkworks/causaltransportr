@@ -1,0 +1,690 @@
+---
+title: "Technical Details : identification and estimation"
+author:
+  - name: Apoorva Lal
+    affiliation: Netflix
+date: "`r Sys.Date()`"
+---
+
+<!--- For HTML renders - selection from math_shortcuts.tex --->
+`r if (!knitr:::is_latex_output()) '
+$\\DeclareMathOperator*{\\argmin}{argmin}$
+$\\newcommand{\\abs}[1]{\\left\\vert {#1} \\right\\vert}$
+$\\newcommand{\\indep}{\\perp\\!\\!\\!\\perp}$
+$\\newcommand{\\var}{\\mathrm{Var}}$
+$\\newcommand{\\ephi}{\\varephilon}$
+$\\newcommand{\\phii}{\\varphi}$
+$\\newcommand{\\tra}{^{\\top}}$
+$\\newcommand{\\sumin}{\\sum_{i=1}^n}$
+$\\newcommand{\\sumiN}{\\sum_{i=1}^n}$
+$\\newcommand{\\norm}[1]{\\left\\Vert{#1} \\right\\Vert}$
+$\\newcommand\\Bigpar[1]{\\left( #1 \\right )}$
+$\\newcommand\\Bigbr[1]{\\left[ #1 \\right ]}$
+$\\newcommand\\Bigcr[1]{\\left\\{ #1 \\right \\}}$
+$\\newcommand\\SetB[1]{\\left\\{ #1 \\right\\}}$
+$\\newcommand\\Sett[1]{\\mathcal{#1}}$
+$\\newcommand{\\Data}{\\mathcal{D}}$
+$\\newcommand{\\Ubr}[2]{\\underbrace{#1}_{\\text{#2}}}$
+$\\newcommand{\\Obr}[2]{ \\overbrace{#1}^{\\text{#2}}}$
+$\\newcommand{\\sumiN}{\\sum_{i=1}^N}$
+$\\newcommand{\\dydx}[2]{\\frac{\\partial #1}{\\partial #2}}$
+$\\newcommand\\Indic[1]{\\mathbb{1}_{#1}}$
+$\\newcommand{\\Realm}[1]{\\mathbb{R}^{#1}}$
+$\\newcommand{\\Exp}[1]{\\mathbb{E}\\left[#1\\right]}$
+$\\newcommand{\\Expt}[2]{\\mathbb{E}_{#1}\\left[#2\\right]}$
+$\\newcommand{\\Var}[1]{\\mathbb{V}\\left[#1\\right]}$
+$\\newcommand{\\Covar}[1]{\\text{Cov}\\left[#1\\right]}$
+$\\newcommand{\\Prob}[1]{\\mathbf{Pr}\\left(#1\\right)}$
+$\\newcommand{\\Supp}[1]{\\text{Supp}\\left[#1\\right]}$
+$\\newcommand{\\doyx}{\\Prob{Y \\, |\\,\\mathsf{do} (X = x)}}$
+$\\newcommand{\\doo}[1]{\\Prob{Y |\\,\\mathsf{do} (#1) }}$
+$\\newcommand{\\R}{\\mathbb{R}}$
+$\\newcommand{\\Z}{\\mathbb{Z}}$
+$\\newcommand{\\wh}[1]{\\widehat{#1}}$
+$\\newcommand{\\wt}[1]{\\widetilde{#1}}$
+$\\newcommand{\\wb}[1]{\\overline{#1}}$
+$\\newcommand\\Ol[1]{\\overline{#1}}$
+$\\newcommand\\Ul[1]{\\underline{#1}}$
+$\\newcommand\\Str[1]{#1^{*}}$
+$\\newcommand{\\F}{\\mathsf{F}}$
+$\\newcommand{\\ff}{\\mathsf{f}}$
+$\\newcommand{\\Cdf}[1]{\\mathbb{F}\\left(#1\\right)}$
+$\\newcommand{\\Cdff}[2]{\\mathbb{F}_{#1}\\left(#2\\right)}$
+$\\newcommand{\\Pdf}[1]{\\mathsf{f}\\left(#1\\right)}$
+$\\newcommand{\\Pdff}[2]{\\mathsf{f}_{#1}\\left(#2\\right)}$
+$\\newcommand{\\dd}{\\mathsf{d}}$
+$\\newcommand\\Normal[1]{\\mathcal{N} \\left( #1 \\right )}$
+$\\newcommand\\Unif[1]{\\mathsf{U} \\left[ #1 \\right ]}$
+$\\newcommand\\Bern[1]{\\mathsf{Bernoulli} \\left( #1 \\right )}$
+$\\newcommand\\Binom[1]{\\mathsf{Bin} \\left( #1 \\right )}$
+$\\newcommand\\Pois[1]{\\mathsf{Poi} \\left( #1 \\right )}$
+$\\newcommand\\BetaD[1]{\\mathsf{Beta} \\left( #1 \\right )}$
+$\\newcommand\\Diri[1]{\\mathsf{Dir} \\left( #1 \\right )}$
+$\\newcommand\\Gdist[1]{\\mathsf{Gamma} \\left( #1 \\right )}$
+$\\def\\mbf#1{\\mathbf{#1}}$
+$\\def\\mrm#1{\\mathrm{#1}}$
+$\\def\\mbi#1{\\boldsymbol{#1}}$
+$\\def\\ve#1{\\mbi{#1}}$
+$\\def\\vee#1{\\mathbf{#1}}$
+$\\newcommand{\\Mat}[1]{\\mathbf{#1}}$
+$\\newcommand{\\eucN}[1]{\\norm{#1}}$
+$\\newcommand{\\lzero}[1]{\\norm{#1}_0}$
+$\\newcommand{\\lone}[1]{\\norm{#1}_1}$
+$\\newcommand{\\ltwo}[1]{\\norm{#1}_2}$
+$\\newcommand{\\pnorm}[1]{\\norm{#1}_p}$
+'`
+
+
+```{r global_options, include=FALSE}
+suppressPackageStartupMessages(library(causalTransportR))
+set.seed(94306)
+
+knitr::opts_chunk$set(
+    fig.width = 12, fig.height = 8,
+    cache = FALSE, echo = TRUE, warning = FALSE, message = FALSE
+)
+# %% ####################################################
+```
+
+`causalTransportR` relies on a framework for the missing data problem
+in generalization and transportation that is outlined in gory detail in this document.
+
+# Setup
+
+## Data Preliminaries
+
++ $a \in \Sett{A} := \SetB{1, \dots, K}$ treatment
++ $X \in \R^p$ covariates
++ $Z \in \R^q$ surrogate (short-term) outcomes
++ $Y \in \R$ outcome
++ $S \in \SetB{0, 1}$ selection indicator: takes on value 1 in the
+  experimental sample, 0 otherwise.
+
+We conjecture the existence of potential outcomes $Y^a$ and $Z^a$ for
+each value of treatment $a$ for the long-term and surrogate outcomes
+respectively.
+
+The selection indicator $S$ defines two subpopulations.
+
++ $S = 1$ : The trial sample. We observe $\SetB{A_i, X_i, Y_i}_{i =
+  1}^n$ for these observations. Call these individuals $\Sett{S}_1$.
++ $S = 0$ : The extrapolation sample. There are two data availability
+  cases for this subsample:
+  * Individual covariates $X_i$ observed for each observation in the
+    trial sample. Call these $\Sett{S}_0$. The treatment $a$ may or
+    may not be observed, and the outcome $Y$ is never observed.
+  * Aggregate summary statistics : $\Ol{X}$ sample averages and higher
+    moments observed for extrapolation sample. No treatment or outcome information is available.
+
+The union of these subpopulations is called the *overall* sample
+$\Sett{S}_0 \cup \Sett{S}_1$.
+
+With the above data, our estimators will rely on a handful of nuisance
+functions (sample analogues $\wh{\alpha}$ fit using machine learning
+estimators with cross-fitting)
+
++ $\mu^a(x) = \Exp{Y | A = a , X = x}$: Outcome model. Typically only estimable in $\Sett{S}_1$.
++ $\pi^a(x) = \Prob{A = a | X = x , S = 1}$: Treatment propensity
+  model (henceforth Propensity score). Typically known in an RCT (i.e.
+  the $\Sett{S}_1$ sample).
++ $\rho(x) = \Prob{S = 1 | X = x}$ : Selection propensity model
+  (henceforth Selection score). Typically unknown.
++ $\nu(a, z, x) = \Exp{Y | A = a , Z = z, X = x}$: Augmented outcome
+  model which includes surrogate predictors.
+
+## Estimands
+
+We may be interested in a few estimands. We write marginal means as
+$\phi$ and causal contrasts as $\tau$.
+
+### Baseline
+
+$$
+\phi^1_a = \Exp{Y^a | S = 1}
+$$
+
+$$
+\tau^1(a, a') = \Exp{\tau^1_{a, a'}(X) | S = 1} = \Exp{Y^a - Y^{a'} | S = 1}
+$$
+
+This is identified under standard assumptions since the treatment is
+randomized in the experimental sample.
+
+### Generalisation
+
+$$
+\phi_a = \Exp{Y^a}
+$$
+
+$$
+\tau(a, a') = \Exp{ \tau^0_{a, a'}(X)} = \Exp{Y^a - Y^{a'} }
+$$
+
+This is the treatment effect in the overall population $\Sett{S} := \Sett{S}_1 \cup \Sett{S}_0$, which encompasses the trial sample and the extrapolation sample.
+
+### Transportation
+
+$$
+\phi^0_a = \Exp{Y^a | S = 0}
+$$
+
+$$
+\tau^0(a, a') = \Exp{\tau^0_{a, a'}(X) | S = 0} = \Exp{Y^a - Y^{a'} | S = 0}
+$$
+
+Estimating this is challenging because we don't observed $Y$ for
+anyone in the $\Sett{S}_0$ sample, so we must extrapolate our
+estimates of $\tau(\cdot)$ from the $\Sett{S}_1$ sample. All potential
+outcomes are missing.
+
+
+## Identification Assumptions
+
+1. *Consistency / SUTVA* : $Y_i = \Indic(A_i = a) Y^a_i$. This rules out interference.
+2. *Unconfoundedness in experiment*: $Y^0, \dots, Y^a \indep A | X = x, S = 1$. This is guaranteed by randomization.
+3. Overlap
+    a. *Propensity overlap in trial*: $\Prob{A = a | X = x , S = 1}$
+    b. *Selection overlap*: $\Prob{S = 1 | X = x) > 0}$
+4. *Ignorability of trial participation / Missingness at Random (MAR)*
+    a. $Y^0, \dots, Y^a \indep S | X = x$. This requires that trial participation is as good as random given covariates $X$. Note that this is weaker than *Missingness Completely at Random (MCAR)*, which would require unconditional independence between potential outcomes and selection and obviate the need for any adjustment. This can be weakened to
+    b. *Marginal model / Heterogeneous effect stability*: This requires 'outcome model stability' ($\phi_a(X | S = 0) = \phi_a(X | S = 1)$), i.e. expected potential outcomes as a function  of covariates are identical across trial and extrapolation populations. This  also implies that causal contrasts are stable across  trial and extrapolation populations.
+      $\Exp{\tau_{a, a'}(X)| S = 1} = \Exp{\tau_{a, a'}(X)| S = 0}$
+    c. *Mean exchangeability*: $\Exp{Y^a | X = x, S = 1, A = a} =
+       \Exp{Y^a | X = x, A = a} = \Exp{Y^a | X = x}$.
+
+Under A1-A4, marginal means $\phi_a, \phi^0_a$, and causal contrasts $\tau(a, a')$ and $\tau^0(a, a')$ in the overall and target sample respectively are point identified. A4 is the most demanding condition and must be evaluated with care for each use case. Under weak violations of A4, partial identification is still possible.
+
+# Estimators
+
+We write estimators for generic counterfactual means $\phi$. Each
+estimator characterised by its *influence function* $\psi(z)$, which
+solves the moment condition $\Exp{\psi(\cdot)} = 0$, where $\psi(z)$
+is typically of form $\text{Estimator} - \tau$ such that it obeys
+
+$$
+\sqrt{n} (\wh{\phi} - \phi) = \frac{1}{n} \sumin \psi(z) / \sqrt{n} + O_p(1)
+$$
+
+This makes it a Regular and Asymptotically Normal (RAL) and allows us
+to construct valid confidence intervals. For each influence function,
+we omit the $-\tau$ piece for clarity.
+
+To illustrate the estimation library, we generate some synthetic experimental data
+and illustrate the use of the `ateGT` function for each use case.
+
+
+```{r}
+# simulate RCT
+treatprob <- 0.5
+# workhorse
+dgp <- function(n = 10000, p = 10, treat.prob = treatprob,
+                # bounds of X
+                Xbounds = c(-1, 1),
+                # nonlinear heterogeneity
+                tauF = function(x) 1 / exp(-x[3]),
+                # nonlinear y0
+                y0F = function(x) pmax(x[1] + x[2], 0) + sin(x[5]) * pmax(x[7], 0.5),
+                # nonlinear selection
+                selF = function(x) x[1] - 3 * x[3] + pmax(x[4], 0)) {
+    X <<- matrix(runif(n * p, Xbounds[1], Xbounds[2]), n, p)
+    a <<- rbinom(n, 1, treat.prob)
+    # generate outcomes using supplied functions
+    TAU <<- apply(X, 1, tauF)
+    Y0 <- apply(X, 1, y0F)
+    selscore <- apply(X, 1, selF)
+    # outcome
+    y <<- (a * TAU + Y0 + rnorm(n))
+    # selection
+    s <<- rbinom(n, 1, plogis(selscore)) |> as.logical()
+    # set outcomes for s = 0 as missing
+    y[s == 0] <<- NA
+    cat("True effect\n")
+    cat(mean(TAU))
+}
+# this function populates the global namespace using <<- ; not recommended for real use
+dgp()
+```
+
+The true generalization effect is `r mean(TAU)`. The true transportation
+effect is `r mean(TAU[s==0])`. They are different because the selection score includes $X_3$, which also moderates the treatment effect.
+
+The naive difference in means is severely downward biased.
+
+```{r}
+mean(y[s == 1 & a == 1]) - mean(y[s == 1 & a == 0])
+```
+
+Using the doubly-robust AIPW estimator does not improve things much.
+
+```{r}
+aipw(y[s == 1], a[s == 1], X[s == 1, ], noi = F)$res
+```
+
+## Outcome Modelling (OM)
+
+If high quality estimation of conditional response surfaces $\Exp{Y |
+A = a, S = 1}$ is feasible, and the outcome model truly is stable
+across treatment and selection subsamples (A4b), the counterfactual
+means and causal contrasts in both generalization and transportation
+cases are identified by simple extrapolation over the relevant samples.
+
+
+### generalisation
+
+$$
+\Exp{Y^a} = \Expt{\Sett{S}_0 \cup \Sett{S}_1}{\mu^a(X)}
+$$
+
+where the expectation is taken with respect to the overall sample
+(i.e. marginalizing over $S=0$ and $S=1$ subsamples). Its sample
+analogue is
+
+$$
+\wh{\phi}_a =
+\frac{1}{\abs{\Sett{S}_0 \cup \Sett{S}_1}} \sum_{i \in \Sett{S}_0 \cup
+\Sett{S}_1} \wh{\mu}^{a}(X_i)
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "generalize", estimator = "OM", noi = F)$res
+```
+
+### transportation
+
+$$
+\Exp{Y^a} = \Expt{\Sett{S}_0}{\mu^a(X)}
+$$
+
+with sample analogue
+
+$$
+\wh{\phi}^0_a =
+\frac{1}{\abs{\Sett{S}_0}} \sum_{i \in \Sett{S}_0} \wh{\mu}^{a}(X_i)
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "transport", estimator = "OM", noi = F)$res
+```
+
+## Reweighting
+
+Another reasonable strategy is to reweight the observations in
+$\Sett{S}_1$ to resemble the target sample (either the overall sample
+$\Sett{S}_0 \cup \Sett{S}_1$ or the extrapolation sample
+$\Sett{S}_0$). Different target samples imply different weights.
+
+Generic estimators for the two targets are
+
+$$
+\Exp{Y^a} = \omega_i  \frac{\Indic{A = a}}{\pi^a(X)} Y
+$$
+
+$$
+\Exp{Y^a | S = 0} = \omega_i^0  \frac{\Indic{A = a}}{\pi^a(X)} Y
+$$
+
+
+### Inverse Selection Weights (ISW)
+
+Inverse selection scores are an obvious candidate for a first set weights.
+
+#### generalisation
+
+$$
+\Exp{Y^a} = \frac{S}{\rho(X)}  \frac{\Indic{A = a}}{\pi^a(X)} Y
+$$
+
+The inverse selection weights $1/\rho(X)$ downweight observations that
+are over-represented in the experimental sample relative to the
+overall sample, and vice versa.
+
+Sample analogue:
+
+$$
+\wh{\phi}_a =
+\sum_{i \in \Sett{S}_0 \cup \Sett{S}_1}
+\frac{S_i}{\wh{\rho}(X_i)}  \frac{\Indic{A = a}}{\wh{\pi}^a(X_i)} Y_i
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "generalize", estimator = "ISW", noi = F)$res
+```
+
+#### transportation
+
+$$
+\Exp{Y^a | S = 0} = \frac{S(1 - \rho(X))}{\rho(X)}  \frac{\Indic{A = a}}{\pi^a(X)} Y
+$$
+
+The inverse selection weights $(1-\rho(X))/\rho(X)$ downweight
+observations that are over-represented in the experimental sample
+relative to the extrapolation sample, and vice versa.
+
+
+Sample analogue:
+
+$$
+\wh{\phi}^1_a =
+\frac{1}{\abs{\Sett{S}_0}}
+\sum_{i \in \Sett{S}_1}
+\frac{S_i(1 - \wh{\rho}(X_i))}{\wh{\rho}(X_i)}  \frac{\Indic{A = a}}{\wh{\pi}^a(X_i)} Y_i
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "transport", estimator = "ISW", noi = F)$res
+```
+
+### Augmented ISW (AISW)
+
+We may want to combine the ISW and OM approaches into a more robust
+approach that works well when either $\rho, \pi$ or $\mu$ is correctly
+specified
+
+#### generalisation
+
+$$
+\Exp{Y^a} = \mu(a, X)  +
+      \frac{1}{\rho(X)}
+      \frac{\Indic{A = a}}{\pi^a(X)} (Y - \mu^a(X) )
+$$
+
+This estimator 'augments' the outcome model with an weighted average
+of residuals ($Y - \mu(\cdot)$).
+
+Sample analogue:
+
+
+$$
+\wh{\phi}_a =
+\frac{1}{\abs{\Sett{S}_0 \cup \Sett{S}_1}}
+\sum_{i \in \Sett{S}_0 \cup \Sett{S}_1}
+\wh{\mu}^{a}(X_i) +
+  \frac{S_i}{\wh{\rho}(X_i)}
+      \frac{\Indic{A = a}}{\wh{\pi}^a(X_i)} (Y_i - \wh{\mu}^a(X_i) )
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "generalize", estimator = "AISW", noi = F)$res
+```
+
+
+#### transportation
+
+$$
+\Exp{Y^a | S = 0} = \mu(a, X)  +
+      \frac{1}{\rho(X)}
+      \frac{\Indic{A = a}}{\pi^a(X)} (Y - \mu^a(X) )
+$$
+
+Sample analogue:
+
+$$
+\wh{\phi}^1_a =
+\frac{1}{\abs{\Sett{S}_0 }}
+\sum_{i \in \Sett{S}_0 \cup \Sett{S}_1}
+  (1 - S_i)  \wh{\mu}^{a}(X_i) +
+   \frac{S_i(1 - \wh{\rho}(X_i))}{\wh{\rho}(X_i)}
+      \frac{\Indic{A = a}}{\wh{\pi}^a(X_i)} (Y_i - \wh{\mu}^a(X_i) )
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "transport", estimator = "AISW")
+```
+
+
+### Calibration Weighting (CW)
+
+Estimating a propensity score and taking its inverse can have
+sub-optimal behaviour if certain observations have very small values,
+or if the propensity model is misspecified. Alternatively, we may
+seek to directly solve for balancing weights that guarantee balance
+
+$$
+\sum_{i \in \Sett{S}_0} \omega_i c_{ij}(X_ij) \approx \sum_{i \in
+\Sett{S}_0 \cup \Sett{S}_1} c_{ij}(X_ij)
+$$
+
+in specified moment functions $c_{ij}$ (typically identity functions,
+which implies means and higher moments) between the experimental
+sample and target sample (either the overall or extrapolation sample).
+These weights are 'automatic' in the sense that they do not require a
+choice of parametric model for the outcome or propensity model, and
+have been shown to exhibit excellent performance in finite samples.
+
+
+A popular calibration weight is the entropy weight, which involves
+solving the following (convex) program
+
+\begin{align*}
+  \max_{\mathbf{w}} H(w) &= - \sum_{i : i \in \mathcal{S}_1 } w_i \log w_i \\
+  \text{Balance constraints:} & \sum_{i : i \in \mathcal{S}_1} w_i c_{ri}(\mathbf{X}_i) =
+      m_r(X_j) \text{ with } r \in 1, \dots, R   \\
+  \text{Proper weights:} & \sum_{i : i \in \mathcal{S}_1} w_i = 1 \; \; \text{and }
+  w_i \geq 0 \; \forall \; \{i: i \in \mathcal{S}_1 \}
+\end{align*}
+
+This convex program has $R$ balance constraints that seek to equate
+functions $c_{ri}(X_i)$ in a source sample $\mathcal{S}_1$ to a target
+value $m_r$ (which may be different for the overall or extrapolation
+sample). Solving the dual of the above problem is computationally very
+fast and scales well.
+
+Entropy balancing is also double-robust: it is consistent when the
+outcome model is linear OR if the selection model is log-linear.
+
+#### generalisation
+
+Set $m_r(X_j)$ to be the average covariate values in the overall
+sample. Solve the ebal program and obtain weights $\wh{\omega}_i$
+
+$$
+\wh{\phi}_a =
+\sum_{i \in \Sett{S}_0 \cup \Sett{S}_1}
+\wh{\omega}_i
+\frac{\Indic{A = a}}{\wh{\pi}^a(X)} Y
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "generalize", estimator = "CW")$res
+```
+
+#### transportation
+
+Set $m_r(X_j)$ to be the average covariate values in the extrapolation
+sample. Solve the ebal program and obtain weights $\wh{\omega}_i^1$
+
+$$
+\wh{\phi}_a =
+\sum_{i \in \Sett{S}_0 \cup \Sett{S}_1}
+\wh{\omega}_i^1
+\frac{\Indic{A = a}}{\wh{\pi}^a(X)} Y
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "transport", estimator = "CW")$res
+```
+
+### Augmented Calibration weighting (ACW)
+
+As with AISW, we may want to combine the ICW and OM approaches into a
+more robust approach that works well when either weights or $\mu$ is
+correctly specified
+
+#### generalisation
+
+$$
+\Exp{Y^a} = \mu(a, X)  +
+      \omega
+      \frac{\Indic{A = a}}{\pi^a(X)} (Y - \mu^a(X) )
+$$
+
+This estimator 'augments' the outcome model with an weighted average
+of residuals ($Y - \mu(\cdot)$).
+
+Sample analogue:
+
+$$
+\wh{\phi}_a =
+\frac{1}{\abs{\Sett{S}_0 \cup \Sett{S}_1}}
+\sum_{i \in \Sett{S}_0 \cup \Sett{S}_1}
+\wh{\mu}^{a}(X_i) +
+\wh{\omega}_i
+\frac{\Indic{A = a}}{\wh{\pi}^a(X)} (Y - \wh{\mu}^a(X) )
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "generalize", estimator = "ACW")$res
+```
+
+#### transportation
+
+$$
+\Exp{Y^a | S = 0} = \mu(a, X)  +
+      \omega^1
+      \frac{\Indic{A = a}}{\pi^a(X)} (Y - \mu^a(X) )
+$$
+
+Sample analogue:
+
+$$
+\wh{\phi}^1_a =
+\frac{1}{\abs{\Sett{S}_0 }} \sum_{i \in \Sett{S}_0}
+\wh{\mu}^{a}(X_i) +
+\wh{\omega}_i^1
+\frac{\Indic{A = a}}{\wh{\pi}^a(X)} (Y - \wh{\mu}^a(X) )
+$$
+
+```{r}
+ateGT(y, a, X, s, target = "transport", estimator = "ACW")$res
+```
+
+## Surrogate Models
+
+When surrogate outcomes (outcomes that are measured between baseline
+randomisation and endline), they may be incorporated into the analysis
+and produce precision gains (since outcomes tend to be correlated over
+time).
+
+
+The additional assumption required for consistency here is
+
++ Cohort $S$ is *Missing at Random (MAR)*: $S \indep Y^a | (X , A = a, Z^a)$
+
+
+### Augmented Inverse Selection Weighting with Surrogates (AISWS)
+
+Surrogates can be incorporated into the AISW estimator with an additional debiasing piece
+
+#### generalisation
+
+$$
+\Exp{Y^a} = \mu(a, X)  +
+      \frac{1}{\rho(X)}
+      \frac{\Indic{A = a}}{\pi^a(X)} (Y - \mu^a(X) ) +
+      \frac{\Indic{A = a}}{\pi^a(X)} (\nu^a(Z, X) - \mu^a(X))
+$$
+
+This estimator 'augments' the outcome model with two weighted averages
+of residuals $Y - \mu(\cdot)$ and $\nu(\cdot) - \mu(\cdot)$.
+
+Sample analogue:
+
+$$
+\wh{\phi}_a =
+\frac{1}{\abs{\Sett{S}_0 \cup \Sett{S}_1}}
+\sum_{i \in \Sett{S}_0 \cup \Sett{S}_1}
+\wh{\mu}^{a}(X_i) +
+  \frac{S_i}{\wh{\rho}(X_i)}
+      \frac{\Indic{A = a}}{\wh{\pi}^a(X_i)}
+    (Y_i - \wh{\mu}^a(X_i) ) +
+  \frac{\Indic{A = a}}{\wh{\pi}^a(X_i)}
+  (\wh{\nu}^a(X_i, Z_i) - \wh{\mu}^a(X_i))
+$$
+
+#### transportation
+
+$$
+\Exp{Y^a} = \mu(a, X)  +
+      \frac{1 - \rho(X)}{\rho(X)}
+      \frac{\Indic{A = a}}{\pi^a(X)} (Y - \mu^a(X) ) +
+      \frac{\Indic{A = a}}{\pi^a(X)} (\nu^a(Z, X) - \mu^a(X))
+$$
+
+Sample analogue:
+
+$$
+\wh{\phi}_a =
+\frac{1}{\abs{\Sett{S}_0 \cup \Sett{S}_1}}
+\sum_{i \in \Sett{S}_0 \cup \Sett{S}_1}
+\wh{\mu}^{a}(X_i) +
+  \frac{S_i(1- \wh{\rho}(X_i))}{\wh{\rho}(X_i)}
+      \frac{\Indic{A = a}}{\wh{\pi}^a(X_i)}
+    (Y_i - \wh{\mu}^a(X_i) ) +
+  \frac{\Indic{A = a}}{\wh{\pi}^a(X_i)}
+  (\wh{\nu}^a(X_i, Z_i) - \wh{\mu}^a(X_i))
+$$
+
+
+# Estimation Function for aggregate data for target: `ateCAL`
+
+We simulate some data and withold individual level data from the generalization / target sample.
+
+```{r}
+# generate RCT with 10k obs
+n <- 10000
+p <- 10
+treat.prob <- 0.5 # random assignment
+a <- rbinom(n, 1, treat.prob)
+X <- matrix(rnorm(n * p, 0, 2), n, p)
+TAU <- 1 / (1 + exp(-X[, 3]))
+# step fn in outcome model
+y0 <- X[, 1] + X[, 2] + X[, 5] + pmax(X[, 7], 2)
+y1 <- a * TAU + y0 + rnorm(n)
+y <- (1 - a) * y0 + a * y1
+# selection model misspecified
+selscore <- X[, 1] - 0.5 * X[, 3] + pmax(X[, 4], 0)
+s <- rbinom(n, 1, plogis(selscore)) |> as.logical()
+# now, don't feed the algorithm a, s, X for the s = 0 group
+```
+
+Calibration and Augmented calibration estimators can be used
+for generalization and transportation by setting the target moments to the
+appropriate sample.
+
+## generalisation
+
+Truth: `r mean(TAU)`
+
+```{r}
+target_moments <- colMeans2(X)
+ateCAL(y[s == 1], a[s == 1], X[s == 1, ],
+    treatProb = treat.prob,
+    targetMoments = target_moments,
+    estimator = "ACW", noi = F
+)$res
+
+ateCAL(y[s == 1], a[s == 1], X[s == 1, ],
+    treatProb = treat.prob,
+    targetMoments = target_moments,
+    estimator = "CW", noi = F
+)$res
+```
+
+## transportation
+
+Truth: `r mean(TAU[s ==  0])`
+
+```{r}
+target_moments <- colMeans2(X[s == 0, ])
+ateCAL(y[s == 1], a[s == 1], X[s == 1, ],
+    treatProb = treat.prob,
+    targetMoments = target_moments,
+    estimator = "ACW", noi = F
+)$res
+
+ateCAL(y[s == 1], a[s == 1], X[s == 1, ],
+    treatProb = treat.prob,
+    targetMoments = target_moments,
+    estimator = "CW", noi = F
+)$res
+```

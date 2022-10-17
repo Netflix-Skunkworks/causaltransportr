@@ -1,0 +1,70 @@
+---
+title: "Covariate Adjustment using ML predictions"
+author: Apoorva Lal
+date: "`r Sys.Date()`"
+---
+
+We simulate some experimental data with effect heterogeneity, and
+use the Guo et al (2021) `mlrate` approach to estimate treatment effects using regression adjustment.
+
+```{r}
+suppressPackageStartupMessages(library(causalTransportR))
+set.seed(42)
+
+# simulate RCT
+treatprob <- 0.5
+
+# workhorse
+dgp <- function(n = 1000, p = 10, treat.prob = treatprob,
+                # bounds of X
+                Xbounds = c(-1, 1),
+                # nonlinear heterogeneity
+                tauF = function(x) 1 / exp(-x[3]),
+                # nonlinear y0
+                y0F = function(x) x[1] + x[2] + sin(x[5]) + pmax(x[7], 0.5)) {
+    X <- matrix(runif(n * p, Xbounds[1], Xbounds[2]), n, p)
+    a <- rbinom(n, 1, treat.prob)
+    # generate outcomes using supplied functions
+    TAU <- apply(X, 1, tauF)
+    Y0 <- apply(X, 1, y0F)
+    # outcome
+    y <- (a * TAU + Y0 + rnorm(n))
+    cat("true effect \n")
+    cat(mean(TAU), "\n")
+    list(y = y, a = a, X = X)
+}
+```
+
+## naive difference in means
+
+```{r}
+library(estimatr) # for linear regression with robust SEs
+effect_se <- function(x) {
+    x %>%
+        summary() %>%
+        .$coefficients %>%
+        .[2, 1:2]
+}
+
+df <- dgp()
+lm_robust(df$y ~ df$a) %>% effect_se()
+```
+
+## linear covariate adjustment
+
+```{r}
+lm_robust(df$y ~ df$a + df$X) %>% effect_se()
+```
+
+## ML covariate adjustment
+
+Adjust for linear and interaction terms with LASSO.
+
+```{r}
+mlRate(df$y, df$a, polySieveM(df$X, k = 2, m = 2), nuisMod = "rlm")
+```
+
+
+__References__
+
+Guo, Y., D. Coey, M. Konutgan, W. Li, C. Schoener, and M. Goldman. (2021): “Machine Learning for Variance Reduction in Online Experiments,” arXiv [stat.ML]

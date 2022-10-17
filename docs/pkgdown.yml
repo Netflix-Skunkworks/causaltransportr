@@ -1,0 +1,10 @@
+pandoc: 2.9.2.1
+pkgdown: 2.0.6
+pkgdown_sha: ~
+articles:
+  generalization: generalization.html
+  mlrate: mlrate.html
+  omnibus: omnibus.html
+  tech_details: tech_details.html
+last_built: 2022-10-17T00:29Z
+
