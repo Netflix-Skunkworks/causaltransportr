@@ -146,10 +146,10 @@ generalization, means in target sample for transportation</p></dd>
 <span class="r-in"><span><span class="va">X</span> <span class="op">=</span> <span class="va">df</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="va">id</span> <span class="op">==</span> <span class="fl">1</span>,<span class="op">]</span>; <span class="va">y</span> <span class="op">=</span> <span class="va">df</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="va">id</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span>; <span class="va">a</span> <span class="op">=</span> <span class="va">df</span><span class="op">$</span><span class="va">a</span><span class="op">[</span><span class="va">id</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">Xtar</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="op">!</span><span class="va">id</span>, <span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ateCAL</span><span class="op">(</span><span class="va">y</span>, <span class="va">a</span>, <span class="va">X</span>, targetMoments <span class="op">=</span> <span class="va">Xtar</span>, estimator <span class="op">=</span> <span class="st">"ACW"</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      parameter      est        se     ci.ll    ci.ul pval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 1.046638 0.1228043 0.8059410 1.287334    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 2.107489 0.1043802 1.9029035 2.312074    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 1.060851 0.1491026 0.7686101 1.353092    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      parameter       est         se     ci.ll    ci.ul pval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 1.0412410 0.10199043 0.8413398 1.241142    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 1.9991269 0.08115737 1.8400584 2.158195    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 0.9578858 0.11333311 0.7357529 1.180019    0</span>
 </code></pre></div>
     </div>
   </div>

@@ -167,19 +167,19 @@ and returns marginal means, causal contrasts, and their influence-function based
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># simulation with no selection bias (generate by passing null function for selection)</span></span></span>
 <span class="r-in"><span><span class="va">df2</span> <span class="op">=</span> <span class="fu"><a href="selDGP.html">selDGP</a></span><span class="op">(</span>selF <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">df2</span><span class="op">$</span><span class="va">tau</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># true effect : sinh(1)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.171758</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.174767</span>
 <span class="r-in"><span><span class="co"># lasso</span></span></span>
 <span class="r-in"><span><span class="fu">aipw</span><span class="op">(</span><span class="va">df2</span><span class="op">$</span><span class="va">y</span>, <span class="va">df2</span><span class="op">$</span><span class="va">a</span>, <span class="va">df2</span><span class="op">$</span><span class="va">X</span>, noi <span class="op">=</span> <span class="cn">FALSE</span>, nuisMod <span class="op">=</span> <span class="st">"rlm"</span><span class="op">)</span><span class="op">$</span><span class="va">res</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      parameter      est         se     ci.ll    ci.ul pval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 1.053885 0.04317185 0.9692684 1.138502    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 2.195108 0.03614675 2.1242603 2.265956    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 1.141223 0.03409304 1.0744004 1.208045    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 1.031194 0.04412851 0.9447026 1.117686    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 2.201394 0.03646349 2.1299252 2.272862    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 1.170199 0.03520266 1.1012020 1.239196    0</span>
 <span class="r-in"><span><span class="co"># random forest</span></span></span>
 <span class="r-in"><span><span class="fu">aipw</span><span class="op">(</span><span class="va">df2</span><span class="op">$</span><span class="va">y</span>, <span class="va">df2</span><span class="op">$</span><span class="va">a</span>, <span class="va">df2</span><span class="op">$</span><span class="va">X</span>, noi <span class="op">=</span> <span class="cn">FALSE</span>, nuisMod <span class="op">=</span> <span class="st">"rf"</span><span class="op">)</span><span class="op">$</span><span class="va">res</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      parameter      est         se     ci.ll    ci.ul pval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 1.055843 0.04117360 0.9751427 1.136543    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 2.193863 0.03577818 2.1237374 2.263988    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 1.138020 0.02845892 1.0822401 1.193799    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      parameter      est         se    ci.ll    ci.ul pval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 1.023613 0.04199766 0.941298 1.105929    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 2.200142 0.03599278 2.129597 2.270688    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 1.176529 0.02965521 1.118405 1.234653    0</span>
 </code></pre></div>
     </div>
   </div>
