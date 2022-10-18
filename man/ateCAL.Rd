@@ -55,7 +55,7 @@ Where \eqn{\omega} is solved for using entropy balancing for balance with target
 \examples{
 df = selDGP(n = 10000)
 id = with(df, s == 1)
-X = df$X[id == 1,]; y = df$y[id == 1]; a = df$a[id == 1]
+X = df$X[id == 1, ]; y = df$y[id == 1]; a = df$a[id == 1]
 Xtar = colMeans(df$X[!id, ])
 ateCAL(y, a, X, targetMoments = Xtar, estimator = "ACW") \%>\% summary()
 }

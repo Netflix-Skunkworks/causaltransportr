@@ -11,7 +11,7 @@ polySieveM(
   corr_cut = 0.9,
   k = 2,
   m = 2,
-  raw = F
+  raw = FALSE
 )
 }
 \arguments{
