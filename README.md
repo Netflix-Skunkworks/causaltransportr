@@ -2,8 +2,7 @@
 
 causalTransportR implements a number of estimators to generalize and
 transport causal effects by reweighting doubly-robust score functions
-with transformations of selection scores to generalize and/or
-transport causal effects. All nuisance functions are cross-fit using
+with transformations of selection scores. All nuisance functions are cross-fit using
 fast supervised learning algorithms.
 
 
