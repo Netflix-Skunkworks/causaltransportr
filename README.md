@@ -7,12 +7,13 @@ cross-fit using fast supervised learning algorithms.
 
 ## Estimators
 
-The `ateCAL` function implements the following estimators by
+The `ateGT` function implements the following estimators by
 aggregating estimates of individual marginal means over different
 marginal $X$ distributions for the generalization and transportation
 case. $\mu, \pi, \rho$ are nuisance parameters fit using ML.
 
 ![](man/figures/estTable.png)
+
 
 ## Installation
 

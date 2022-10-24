@@ -158,19 +158,19 @@ and returns marginal means, causal contrasts, and their influence-function based
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># simulation with no selection bias (generate by passing null function for selection)</span></span></span>
 <span class="r-in"><span><span class="va">df2</span> <span class="op">=</span> <span class="fu"><a href="selDGP.html">selDGP</a></span><span class="op">(</span>selF <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">df2</span><span class="op">$</span><span class="va">tau</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># true effect : sinh(1)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.173417</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.169659</span>
 <span class="r-in"><span><span class="co"># lasso</span></span></span>
 <span class="r-in"><span><span class="fu">aipw</span><span class="op">(</span><span class="va">df2</span><span class="op">$</span><span class="va">y</span>, <span class="va">df2</span><span class="op">$</span><span class="va">a</span>, <span class="va">df2</span><span class="op">$</span><span class="va">X</span>, noi <span class="op">=</span> <span class="cn">FALSE</span>, nuisMod <span class="op">=</span> <span class="st">"rlm"</span><span class="op">)</span><span class="op">$</span><span class="va">res</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      parameter       est         se     ci.ll    ci.ul pval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 0.9406017 0.04311354 0.8560991 1.025104    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 2.2060840 0.03603019 2.1354648 2.276703    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 1.2654823 0.03405089 1.1987425 1.332222    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 0.9710327 0.04317201 0.8864155 1.055650    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 2.1088107 0.03670052 2.0368777 2.180744    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 1.1377780 0.03381391 1.0715028 1.204053    0</span>
 <span class="r-in"><span><span class="co"># random forest</span></span></span>
 <span class="r-in"><span><span class="fu">aipw</span><span class="op">(</span><span class="va">df2</span><span class="op">$</span><span class="va">y</span>, <span class="va">df2</span><span class="op">$</span><span class="va">a</span>, <span class="va">df2</span><span class="op">$</span><span class="va">X</span>, noi <span class="op">=</span> <span class="cn">FALSE</span>, nuisMod <span class="op">=</span> <span class="st">"rf"</span><span class="op">)</span><span class="op">$</span><span class="va">res</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      parameter       est         se     ci.ll    ci.ul pval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 0.9831722 0.04122702 0.9023673 1.063977    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 2.1909966 0.03574042 2.1209453 2.261048    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 1.2078243 0.02891910 1.1511429 1.264506    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      E{Y(0)} 0.9748945 0.04119507 0.8941522 1.055637    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      E{Y(1)} 2.1053377 0.03629204 2.0342053 2.176470    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E{Y(1)-Y(0)} 1.1304432 0.02800378 1.0755558 1.185331    0</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
