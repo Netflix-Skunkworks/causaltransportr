@@ -34,7 +34,7 @@ generalization effect and influence functions
 }
 \description{
 Augmented IPW, generalization, or transport estimator with fast fixest regressions and computation in `data.table` (1.14.5), no regularization, and no sample splitting. Imputes counterfactual outcome for each observation i under each treament a as
-\eqn{Y^a = \frac{S}{\rho(X)} \frac{A = a}{\pi^a (X)} (Y - \hat{\mu}^a(X)) + \mu^a(X) }
+\eqn{Y^a = \frac{S}{\rho(X)} \frac{A = a}{\pi^a (X)} (Y - \mu^a(X)) + \mu^a(X) }
 Where the first term is 1 for all observations under no sample selection, and therefore this is the doubly-robust Augmented Inverse Propensity Weighting (AIPW) estimator. When S is supplied, the argument in 'target' is used to fit either the generalization or transportation estimator.
 Recommended with the nonparametric/bayesian bootstrap for inference.
 }

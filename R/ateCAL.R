@@ -2,7 +2,7 @@
 #' ateCAL: reweight experimental results to match external sample
 #' @description Generalization or transportation estimator with method of
 #'  moments weighting. Imputes counterfactual outcome for each observation i under each treament a as
-#' \deqn{Y^a = \omega \frac{A = a}{\pi^a (X)} (Y - \hat{\mu}^a(X)) + \mu^a(X) }
+#' \deqn{Y^a = \omega \frac{A = a}{\pi^a (X)} (Y - \mu^a(X)) + \mu^a(X) }
 #' Where \eqn{\omega} is solved for using entropy balancing for balance with target moments.
 #' @param y outcome vector [length n]
 #' @param a treatment vector [length n]

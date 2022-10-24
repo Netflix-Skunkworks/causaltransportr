@@ -25,7 +25,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-light"><div class="container">
+    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-primary"><div class="container">
     
     <a class="navbar-brand me-2" href="index.html">causalTransportR</a>
 
@@ -66,7 +66,13 @@
 <div class="page-header"><h1 id="causaltransportr--a-package-for-bridging-causal-effects-to-new-or-general-populations">
 <code>causalTransportR</code> : a package for bridging causal effects to new or general populations<a class="anchor" aria-label="anchor" href="#causaltransportr--a-package-for-bridging-causal-effects-to-new-or-general-populations"></a>
 </h1></div>
-<p>causalTransportR implements a number of estimators to generalize and transport causal effects by reweighting doubly-robust score functions with transformations of selection scores to generalize and/or transport causal effects. All nuisance functions are cross-fit using fast supervised learning algorithms.</p>
+<p><code>causalTransportR</code> implements a number of estimators to generalize and transport causal effects by reweighting doubly-robust score functions with transformations of selection scores. All nuisance functions are cross-fit using fast supervised learning algorithms.</p>
+<div class="section level2">
+<h2 id="estimators">Estimators<a class="anchor" aria-label="anchor" href="#estimators"></a>
+</h2>
+<p>The <code>ateCAL</code> function implements the following estimators by aggregating estimates of individual marginal means over different marginal <span class="math inline"><em>X</em></span> distributions for the generalization and transportation case. <span class="math inline"><em>μ</em>, <em>π</em>, <em>ρ</em></span> are nuisance parameters fit using ML.</p>
+<p><img src="reference/figures/estTable.png"></p>
+</div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -76,7 +82,7 @@
 <div class="section level2">
 <h2 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
 </h2>
-<p>Lal, Apoorva, Wenjing Zheng, Simon Ejdemyr, “A Framework for Generalization and Transportation of Causal Estimates under Covariate Shift”, 2022.</p>
+<p><a href="https://apoorvalal.github.io/files/papers/causalTransport.pdf" class="external-link">Lal, Apoorva, Wenjing Zheng, Simon Ejdemyr, “A Framework for Generalization and Transportation of Causal Estimates under Covariate Shift”, 2022</a></p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">

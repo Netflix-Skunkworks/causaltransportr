@@ -70,7 +70,7 @@ list containing treatment effects table , nuisance function estimates, and influ
 }
 \description{
 Augmented IPW, generalization, or transport estimator with ML and cross-fitting for nuisance functions. Imputes counterfactual outcome for each observation i under each treament a as
-\deqn{Y^a = \omega \frac{A = a}{\pi^a (X)} (Y - \hat{\mu}^a(X)) + \mu^a(X) }
+\deqn{Y^a = \omega \frac{A = a}{\pi^a (X)} (Y - \mu^a(X)) + \mu^a(X) }
 Where \eqn{\omega} is 1 for all observations under no sample selection, and therefore this is the doubly-robust Augmented Inverse Propensity Weighting (AIPW) estimator. When S is supplied, the argument in 'target' is used to fit either the generalization or transportation estimator, which corresponds with \eqn{\omega = S/\rho(X)} and \eqn{\omega = (S (1-\rho(X)) /\rho(X)} respectively. When a surrogate vector \eqn{Z} is supplied, an additional residual piece \eqn{a /\pi(X)(\hat{\nu}(X, Z) -  \hat{\mu}(X))}  is added to the influence function.
 Average treatment effects are defined as averages of differences between counterfactual outcomes \eqn{Y^a - Y^{a'}}.
 }

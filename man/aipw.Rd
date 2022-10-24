@@ -61,7 +61,7 @@ list containing treatment effects table , nuisance function estimates, and influ
 }
 \description{
 Simplified version of `ateGT` with no selection indicator. Imputes counterfactual outcome for each observation i under each treament a as
-\deqn{Y^a = \frac{A = a}{\pi^a (X)} (Y - \hat{\mu}^a(X)) + \mu^a(X) }
+\deqn{Y^a = \frac{A = a}{\pi^a (X)} (Y - \mu^a(X)) + \mu^a(X) }
 Average treatment effects are defined as averages of differences between counterfactual outcomes \eqn{Y^a - Y^{a'}}.
 and returns marginal means, causal contrasts, and their influence-function based variance estimates. Uses same underlying nuisance function fitter as `ateGT` with no missing data or surrogates.
 }
